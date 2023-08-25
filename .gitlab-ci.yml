@@ -1,0 +1,54 @@
+# Define the stages for the GitLab CI pipeline
+stages:
+ - Snapshot
+
+# Job to run tests on Chrome browser
+Test Chrome:
+ stage: Snapshot
+ image: docker-image-url
+ services:
+ - docker:VERSION
+ variables:
+   # Define Docker host information
+   DOCKER_HOST: "tcp://localhost:PORT_NUMBER"
+   DOCKER_TLS_CERTDIR: ""
+ only:
+   # Limit the job execution to the 'master' branch
+   - master
+ script:
+   # Build the Docker image using the provided Dockerfile and tag it as 'snapshot-testing'
+   - docker build . -f Dockerfile -t snapshot-testing
+   # Run the Docker container for Chrome browser testing
+   - docker run - rm -e BROWSER=chrome -v $PWD:/cypress -w /cypress snapshot-testing
+ artifacts:
+   # Specify that artifacts (snapshots) should be saved
+   when: always
+   paths:
+     - cypress/snapshots
+   # Define the expiration duration for the artifacts
+   expire_in: 15 days
+
+# Job to runs tests on Firefox browser
+Test Firefox:
+ stage: Snapshot
+ image: docker-image-url
+ services:
+ - docker:VERSION
+ variables:
+   # Define Docker host information
+   DOCKER_HOST: "tcp://localhost:PORT_NUMBER"
+ only:
+   # Limit the job execution to the 'master' branch
+   - master
+ script:
+   # Build the Docker image using the provided Dockerfile and tag it as 'snapshot-testing'
+   - docker build . -f Dockerfile -t snapshot-testing
+   # Run the Docker container for Firefox browser testing
+   - docker run - rm -e BROWSER=firefox -v $PWD:/cypress -w /cypress snapshot-testing
+ artifacts:
+   # Specify that artifacts (e.g., snapshots) should be saved
+   when: always
+   paths:
+     - cypress/snapshots
+   # Define the expiration duration for the artifacts
+   expire_in: 15 days
